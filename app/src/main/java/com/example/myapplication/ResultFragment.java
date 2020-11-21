@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -12,6 +13,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
 
 
 public class ResultFragment extends Fragment {
@@ -29,6 +40,7 @@ public class ResultFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_result, container, false);
         context = getActivity();
         textView4 = view.findViewById(R.id.textView4);
+        editextdetails=view.findViewById(R.id.editText2);
         button = view.findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,6 +53,7 @@ public class ResultFragment extends Fragment {
         }); textView4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                addfirebasedata();
                 Intent intent = new Intent("position");
                 intent.putExtra("value","0");
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
@@ -48,5 +61,40 @@ public class ResultFragment extends Fragment {
             }
         });
         return view;
+    }
+    private void addfirebasedata(){
+        String a= editextdetails.getText().toString();
+        addTodatabase(a);
+    }
+    private void addTodatabase(final String a){
+        final DatabaseReference RootRef;
+        RootRef = FirebaseDatabase.getInstance().getReference();
+
+        RootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                if (!(dataSnapshot.child("result").child(a).exists()))
+                {
+                    HashMap<String, Object> userdataMap = new HashMap<>();
+                    userdataMap.put("result", a);
+
+
+                    RootRef.child("result").child(a).updateChildren(userdataMap)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task)
+                                {
+                                }
+                            });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }
